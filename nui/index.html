@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CentralCart Store</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: 'rgb(var(--color-primary) / <alpha-value>)',
+            muted: 'rgb(var(--color-muted) / <alpha-value>)',
+            background: 'rgb(var(--color-background) / <alpha-value>)',
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="bg-white/0 m-0 p-0 overflow-hidden select-none">
+
+  <div id="app-backdrop"></div>
+  <div id="app" class="hidden w-screen h-screen flex items-center justify-center">
+  </div>
+
+  <script src="js/centralcart.js"></script>
+  <script src="js/templates/default/components/errors.js"></script>
+  <script src="js/templates/default/components/store.js"></script>
+  <script src="js/templates/default/components/product.js"></script>
+  <script src="js/templates/default/components/cart.js"></script>
+  <script src="js/templates/default/components/checkout.js"></script>
+  <script src="js/templates/default/components/fields.js"></script>
+  <script src="js/templates/default/components/pix.js"></script>
+  <script src="js/templates/default/main.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>
