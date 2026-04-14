@@ -1,5 +1,10 @@
 CentralCart = {
-  framework = "auto", -- "auto", "vrp-default", "vrp", "vrpex", "vrp-creative_3", "vrp-creative_4", "vrp-creative_5", "creativev2", "creativev5", "creativev6", "vrp-creative-network", "qbcore", "esx", "blank"
+  
+  framework = "auto",
+  -- Frameworks suportadas: vrp, vrp-default, vrp-creative_3, vrp-creative_4, vrp-creative_5, vrp-creative_network, qbcore
+  -- auto  -> o sistema tentará detectar qual framework você utiliza
+  -- blank -> use caso nenhuma acima seja o seu caso
+
   store = "", -- "https://seudominio.centralcart.com.br/"
   command = "loja", -- comando para abrir a loja
   template = "default", -- "default" / único template disponível atualmente

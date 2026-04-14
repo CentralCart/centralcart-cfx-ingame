@@ -2,7 +2,6 @@ local cachedCategories = nil
 local detectedFramework = nil
 local vRP = nil
 local QBCore = nil
-local ESX = nil
 local cachedCategoryPackages = {}
 local API_BASE = 'https://api.centralcart.io/v1'
 
@@ -19,15 +18,13 @@ local function detectFramework()
             fw = 'vrp-default'
         elseif GetResourceState('qb-core') == 'started' then
             fw = 'qbcore'
-        elseif GetResourceState('es_extended') == 'started' then
-            fw = 'esx'
         end
     end
 
     if fw == 'blank' then
         detectedFramework = 'custom'
         print('^2[CentralCart] Framework Customizada: (Personalize a função: customGetPlayerId)^0')
-    elseif fw == 'vrp-default' or fw == 'vrp' or fw == 'vrpex' or fw == 'vrp-creative_3' or fw == 'vrp-creative_4' or fw == 'vrp-creative_5' or fw == 'creativev5' or fw == 'creativev6' or fw == 'creativev2' or fw == 'vrp-creative-network' then
+    elseif fw == 'vrp' or fw == 'vrp-default' or fw == 'vrp-creative_3' or fw == 'vrp-creative_4' or fw == 'vrp-creative_5' or fw == 'vrp-creative_network' then
         local ok, result = pcall(function()
             local Proxy = module("vrp", "lib/Proxy")
             return Proxy.getInterface("vRP")
@@ -48,10 +45,6 @@ local function detectFramework()
         QBCore = exports['qb-core']:GetCoreObject()
         detectedFramework = 'qbcore'
         print('^2[CentralCart] Framework detectado: QBCore^0')
-    elseif fw == 'esx' then
-        ESX = exports['es_extended']:getSharedObject()
-        detectedFramework = 'esx'
-        print('^2[CentralCart] Framework detectado: ESX^0')
     else
         detectedFramework = nil
         print('^3[CentralCart] Nenhum framework detectado.^0')
@@ -142,11 +135,6 @@ getPlayerId = function(source)
         local player = QBCore.Functions.GetPlayer(source)
         if player then
             return player.PlayerData.citizenid
-        end
-    elseif detectedFramework == 'esx' and ESX then
-        local player = ESX.GetPlayerFromId(source)
-        if player then
-            return player.identifier
         end
     end
 
