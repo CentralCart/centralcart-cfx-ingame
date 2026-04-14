@@ -1,5 +1,5 @@
 CentralCart = {
-  framework = "auto", -- "auto", "vrp", "vrpex", "creativev5", "creativev6", "qbcore", "esx", "blank"
+  framework = "auto", -- "auto", "vrp-default", "vrp", "vrpex", "vrp-creative_3", "vrp-creative_4", "vrp-creative_5", "creativev2", "creativev5", "creativev6", "vrp-creative-network", "qbcore", "esx", "blank"
   store = "", -- "https://seudominio.centralcart.com.br/"
   command = "loja", -- comando para abrir a loja
   template = "default", -- "default" / único template disponível atualmente

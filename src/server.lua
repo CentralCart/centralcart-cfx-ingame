@@ -84,6 +84,8 @@ local discordDbQueries = {
     { query = "SELECT value as discord FROM identifiers WHERE type = 'discord' AND owner = @val", param = "id" }
 }
 
+local getPlayerId
+
 local function getPlayerDiscord(source)
     local discord = GetPlayerIdentifierByType(source, 'discord')
     if discord then
@@ -122,7 +124,7 @@ local function getPlayerDiscord(source)
     return nil
 end
 
-local function getPlayerId(source)
+getPlayerId = function(source)
     if not detectedFramework then return nil end
 
     if detectedFramework == 'custom' then
