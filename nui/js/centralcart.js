@@ -42,10 +42,15 @@ window.CentralCart = {
   },
 
   _normalizePackage(pkg) {
+    const hasVariations = Array.isArray(pkg.variations) && pkg.variations.length > 0;
     if (pkg.pricing) {
-      pkg.price = pkg.pricing.price ?? pkg.price;
+      const basePrice = hasVariations ? (pkg.pricing.min ?? pkg.pricing.price) : pkg.pricing.price;
+      pkg.price = basePrice ?? pkg.price;
       pkg.compare_at_price = pkg.pricing.compare_at ?? pkg.compare_at_price;
+      pkg.price_min = pkg.pricing.min ?? null;
+      pkg.price_max = pkg.pricing.max ?? null;
     }
+    pkg.has_variations = hasVariations;
     if (pkg.stock) {
       pkg.inventory_amount = pkg.stock.quantity ?? pkg.inventory_amount;
       if (pkg.stock.available === false && pkg.inventory_amount === null) {
@@ -67,7 +72,9 @@ window.CentralCart = {
 
     const data = await res.json();
     const rawPkgs = Array.isArray(data) ? data : (data.data || []);
-    return rawPkgs.map(pkg => this._normalizePackage(pkg));
+    return rawPkgs
+      .filter(p => !p.parent_id)
+      .map(pkg => this._normalizePackage(pkg));
   },
 
   async fetchGateways(baseURL, storeDomain) {

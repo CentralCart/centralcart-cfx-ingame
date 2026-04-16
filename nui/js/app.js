@@ -238,17 +238,24 @@ if (!DEV_MODE) {
         if (data.discord) storeDiscord = data.discord;
         break;
       case 'categoryPackages':
-        const catPkgs = (data.packages || []).map(pkg => {
-          if (pkg.pricing) {
-            pkg.price = pkg.pricing.price ?? pkg.price;
-            pkg.compare_at_price = pkg.pricing.compare_at ?? pkg.compare_at_price;
-          }
-          if (pkg.stock) {
-            pkg.inventory_amount = pkg.stock.quantity ?? pkg.inventory_amount;
-            if (pkg.stock.available === false && pkg.inventory_amount === null) pkg.inventory_amount = 0;
-          }
-          return pkg;
-        });
+        const catPkgs = (data.packages || [])
+          .filter(p => !p.parent_id)
+          .map(pkg => {
+            const hasVariations = Array.isArray(pkg.variations) && pkg.variations.length > 0;
+            if (pkg.pricing) {
+              const basePrice = hasVariations ? (pkg.pricing.min ?? pkg.pricing.price) : pkg.pricing.price;
+              pkg.price = basePrice ?? pkg.price;
+              pkg.compare_at_price = pkg.pricing.compare_at ?? pkg.compare_at_price;
+              pkg.price_min = pkg.pricing.min ?? null;
+              pkg.price_max = pkg.pricing.max ?? null;
+            }
+            pkg.has_variations = hasVariations;
+            if (pkg.stock) {
+              pkg.inventory_amount = pkg.stock.quantity ?? pkg.inventory_amount;
+              if (pkg.stock.available === false && pkg.inventory_amount === null) pkg.inventory_amount = 0;
+            }
+            return pkg;
+          });
         storePackages.push(...catPkgs.filter(p => !storePackages.some(sp => sp.id === p.id)));
         const pendingSection = pendingSectionLoads[data.categoryId];
         if (pendingSection) {
@@ -694,6 +701,7 @@ function filterCategory(categoryId) {
 function openProductDetail(pkgId) {
   const pkg = storePackages.find(p => p.id === pkgId);
   if (!pkg) return;
+  selectedVariation = null;
   const T = getTemplate();
   const overlay = document.createElement('div');
   overlay.id = 'product-detail-overlay';
@@ -702,6 +710,12 @@ function openProductDetail(pkgId) {
   document.body.appendChild(overlay);
   if (typeof lucide !== 'undefined') lucide.createIcons();
   requestAnimationFrame(() => overlay.classList.add('show'));
+
+  const hasVariations = pkg.has_variations || (Array.isArray(pkg.variations) && pkg.variations.length > 0);
+  if (hasVariations) {
+    const firstOpt = overlay.querySelector('.variation-option');
+    if (firstOpt) selectVariation(firstOpt);
+  }
 }
 
 function adjustProductDetailHeight() {
@@ -720,6 +734,7 @@ function closeProductDetail() {
   overlay.classList.remove('show');
   overlay.classList.add('hide');
   setTimeout(() => overlay.remove(), 200);
+  selectedVariation = null;
 }
 
 function showLoading() {
@@ -787,6 +802,76 @@ function addToCart(id, name, price, image) {
   }
 
   doAddToCart(id, name, price, image, {});
+}
+
+let selectedVariation = null;
+
+function toggleVariationSelect(btn) {
+  const container = btn.closest('.custom-select');
+  const dropdown = container?.querySelector('.variation-select-dropdown');
+  const arrow = btn.querySelector('.variation-select-arrow');
+  if (!dropdown) return;
+  const isOpen = !dropdown.classList.contains('hidden');
+  if (isOpen) {
+    dropdown.classList.add('hidden');
+    if (arrow) arrow.style.removeProperty('transform');
+  } else {
+    dropdown.classList.remove('hidden');
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
+  }
+}
+
+function selectVariation(optEl) {
+  selectedVariation = {
+    id: Number(optEl.dataset.variationId),
+    name: optEl.dataset.variationName,
+    price: Number(optEl.dataset.variationPrice),
+    image: optEl.dataset.variationImage,
+  };
+
+  const container = optEl.closest('.custom-select');
+  if (container) {
+    const label = container.querySelector('.variation-select-label');
+    if (label) {
+      label.textContent = `${selectedVariation.name} — R$ ${formatPrice(selectedVariation.price)}`;
+      label.classList.remove('text-white/60');
+      label.classList.add('text-white');
+    }
+    const dropdown = container.querySelector('.variation-select-dropdown');
+    if (dropdown) dropdown.classList.add('hidden');
+    const arrow = container.querySelector('.variation-select-arrow');
+    if (arrow) arrow.style.removeProperty('transform');
+    container.querySelectorAll('.variation-option').forEach(el => {
+      el.classList.remove('text-white', 'font-semibold', 'bg-white/[0.04]');
+      el.classList.add('text-white/70');
+    });
+    optEl.classList.remove('text-white/70');
+    optEl.classList.add('text-white', 'font-semibold', 'bg-white/[0.04]');
+  }
+
+  const priceEl = document.getElementById('product-detail-price');
+  if (priceEl) priceEl.textContent = `R$ ${formatPrice(selectedVariation.price)}`;
+  const priceLabelEl = document.getElementById('product-detail-price-label');
+  if (priceLabelEl) priceLabelEl.textContent = 'por';
+  const imgEl = document.getElementById('product-detail-img');
+  if (imgEl && selectedVariation.image) imgEl.src = selectedVariation.image;
+
+  const addBtn = document.getElementById('product-detail-add-btn');
+  if (addBtn) {
+    addBtn.disabled = false;
+    addBtn.classList.remove('bg-white/10', 'text-white/30', 'cursor-not-allowed');
+    addBtn.classList.add('bg-primary', 'hover:bg-primary/80', 'cursor-pointer');
+    addBtn.innerHTML = `<i data-lucide="shopping-cart" class="w-4 h-4"></i> Adicionar ao carrinho`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+}
+
+function addSelectedVariation() {
+  if (!selectedVariation) return;
+  const v = selectedVariation;
+  closeProductDetail();
+  addToCart(v.id, v.name, v.price, v.image);
+  selectedVariation = null;
 }
 
 function doAddToCart(id, name, price, image, fieldValues) {
@@ -858,6 +943,10 @@ document.addEventListener('click', (e) => {
     document.querySelectorAll('.custom-select-dropdown').forEach(d => {
       d.classList.add('hidden');
       d.previousElementSibling?.querySelector('.custom-select-arrow')?.style.removeProperty('transform');
+    });
+    document.querySelectorAll('.variation-select-dropdown').forEach(d => {
+      d.classList.add('hidden');
+      d.previousElementSibling?.querySelector('.variation-select-arrow')?.style.removeProperty('transform');
     });
   }
 });
